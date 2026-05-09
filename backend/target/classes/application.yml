@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: luminex-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/luminex
+    username: postgres
+    password: password # TODO: Change in production
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+# AI Provider Configurations
+ai:
+  provider: openai # or gemini
+  openai:
+    api-key: ${OPENAI_API_KEY:your_api_key_here}
+  gemini:
+    api-key: ${GEMINI_API_KEY:your_api_key_here}
+
+# Vector DB
+vectordb:
+  pinecone:
+    api-key: ${PINECONE_API_KEY:your_api_key_here}
+    environment: gcp-starter
+    index-name: luminex-index
