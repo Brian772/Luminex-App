@@ -8,12 +8,12 @@ function formatFolderName(id: string) {
     .join(' ');
 }
 
-export default function FolderDetailPage({
+export default async function FolderDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  const { id } = await params;
   const folderName = formatFolderName(id);
 
   return (
@@ -23,3 +23,4 @@ export default function FolderDetailPage({
     />
   );
 }
+
