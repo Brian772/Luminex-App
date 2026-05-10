@@ -1,6 +1,9 @@
- 'use client';
+'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { Upload, FileText } from 'lucide-react';
+import { useDocumentStore } from '@/stores/useDocumentStore';
+import { useLayoutStore } from '@/stores/useLayoutStore';
 
 interface SelectionToolbarState {
   visible: boolean;
@@ -15,6 +18,11 @@ export default function MainPanel({ zenMode }: { zenMode: boolean }) {
     x: 0,
     y: 0,
   });
+
+  const { documents, activeDocumentId } = useDocumentStore();
+  const { setUploadModalOpen } = useLayoutStore();
+
+  const activeDoc = documents.find((d) => d.id === activeDocumentId) ?? null;
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -66,6 +74,50 @@ export default function MainPanel({ zenMode }: { zenMode: boolean }) {
     }
   };
 
+  const formatDate = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Baru saja ditambahkan';
+    if (diffMins < 60) return `Ditambahkan ${diffMins} menit lalu`;
+    if (diffHours < 24) return `Ditambahkan ${diffHours} jam lalu`;
+    return `Ditambahkan ${diffDays} hari lalu`;
+  };
+
+  // ── Empty State ──────────────────────────────────────────────────────────────
+  if (!activeDoc) {
+    return (
+      <main
+        className={`relative flex-1 overflow-y-auto bg-[var(--color-bg-primary)] transition-all duration-300 flex items-center justify-center ${
+          zenMode ? 'px-8 md:px-24' : 'px-6'
+        } py-8`}
+      >
+        <div className="flex flex-col items-center text-center gap-4 max-w-sm">
+          <div className="w-16 h-16 rounded-2xl bg-[var(--color-border-subtle)] flex items-center justify-center">
+            <FileText size={28} className="text-[var(--color-text-primary)] opacity-30" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">Belum ada dokumen</h2>
+            <p className="text-sm text-[var(--color-text-primary)] opacity-50 leading-relaxed">
+              Klik <strong>Unggah / Ekstrak</strong> di sidebar untuk menambahkan dokumen pertamamu.
+            </p>
+          </div>
+          <button
+            onClick={() => setUploadModalOpen(true)}
+            className="mt-2 flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent-primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
+          >
+            <Upload size={15} />
+            Unggah / Ekstrak
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Document View ────────────────────────────────────────────────────────────
   return (
     <main
       ref={panelRef}
@@ -94,38 +146,21 @@ export default function MainPanel({ zenMode }: { zenMode: boolean }) {
       )}
 
       <div className="max-w-[800px] mx-auto">
+        {/* Document Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">Masa Depan AI dalam Produktivitas</h1>
+          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2 leading-tight">
+            {activeDoc.title}
+          </h1>
           <div className="flex items-center gap-4 text-sm text-[var(--color-text-primary)] opacity-60">
-            <span>Ditambahkan 2 jam lalu</span>
+            <span>{formatDate(activeDoc.addedAt)}</span>
             <span>•</span>
-            <span>PDF (2.4 MB)</span>
+            <span>{activeDoc.fileType} ({activeDoc.fileSize})</span>
           </div>
         </div>
 
-        <div className="prose prose-neutral dark:prose-invert max-w-none text-[var(--color-text-primary)] leading-relaxed space-y-6">
-          <p>
-            Kecerdasan Buatan (AI) bukan lagi sekadar alat bantu; ia telah menjadi &apos;Second Brain&apos; atau otak kedua bagi para profesional modern.
-            <span className="bg-[var(--color-accent-secondary)] bg-opacity-20 rounded px-1 cursor-pointer hover:bg-opacity-40 transition-colors">Dengan kemampuannya mengekstrak konteks dari ribuan halaman dalam hitungan detik</span>,
-            AI memungkinkan kita untuk fokus pada pengambilan keputusan strategis daripada terjebak dalam proses membaca manual yang memakan waktu.
-          </p>
-          
-          <p>
-            Konsep &quot;Second Brain&quot; yang diperkenalkan oleh Tiago Forte kini berevolusi. Dulu, kita harus secara manual menyusun, mengelompokkan, dan menandai catatan kita.
-            Sekarang, dengan dukungan model bahasa besar (LLMs), sistem dapat secara otomatis mengenali pola, menghasilkan ringkasan yang relevan, dan bahkan memprediksi informasi apa yang akan kita butuhkan selanjutnya.
-          </p>
-          
-          <h3 className="text-xl font-semibold mt-8 mb-4">Tiga Pilar Produktivitas Baru</h3>
-          <ul className="list-disc pl-5 space-y-2">
-            <li><strong>Ekstraksi Konteks:</strong> Mengubah dokumen panjang menjadi inti sari yang mudah dicerna.</li>
-            <li><strong>Aksi Otomatis:</strong> Mengubah poin-poin diskusi menjadi To-Do list yang dapat dilacak.</li>
-            <li><strong>Pemahaman Aktif:</strong> Membantu pembelajaran melalui flashcards yang di-generate dari teks.</li>
-          </ul>
-
-          <p>
-            Bayangkan sebuah ruang kerja di mana informasi tidak lagi menjadi beban (information overload), melainkan menjadi aliran pengetahuan yang siap digunakan kapan saja.
-            Inilah yang ditawarkan oleh alat produktivitas berbasis AI generasi berikutnya.
-          </p>
+        {/* Document Content */}
+        <div className="text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap text-[0.9375rem]">
+          {activeDoc.content}
         </div>
       </div>
     </main>

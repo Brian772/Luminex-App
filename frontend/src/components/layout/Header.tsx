@@ -1,10 +1,27 @@
- 'use client';
+'use client';
 
 import { Search, Bell, Sun, Moon, PanelLeft } from 'lucide-react';
 import { useLayoutStore } from '@/stores/useLayoutStore';
+import { useDocumentStore } from '@/stores/useDocumentStore';
+import { usePathname } from 'next/navigation';
+
+const PAGE_LABELS: Record<string, string> = {
+  '/dashboard/semua-dokumen': 'Semua Dokumen',
+  '/dashboard/todo-list': 'To-Do List',
+  '/dashboard/flashcards': 'Flashcards',
+};
 
 export default function Header() {
   const { toggleSidebar, toggleDarkMode } = useLayoutStore();
+  const { documents, activeDocumentId } = useDocumentStore();
+  const pathname = usePathname();
+
+  const activeDoc = documents.find((d) => d.id === activeDocumentId) ?? null;
+
+  // Determine breadcrumb label for current route
+  const pageLabel = PAGE_LABELS[pathname] ?? (pathname.startsWith('/dashboard/folders/')
+    ? pathname.split('/').pop()?.split('-').map(w => w[0]?.toUpperCase() + w.slice(1)).join(' ')
+    : 'Dashboard');
 
   return (
     <header className="h-14 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-primary)] flex items-center justify-between px-4 sticky top-0 z-10 transition-colors duration-200">
@@ -21,18 +38,22 @@ export default function Header() {
         </div>
         <div className="hidden md:flex items-center text-sm text-[var(--color-text-primary)] opacity-70 ml-4 gap-2">
           <span>/</span>
-          <span className="hover:underline cursor-pointer">Semua Dokumen</span>
-          <span>/</span>
-          <span className="font-medium opacity-100">Project AI</span>
+          <span>{pageLabel}</span>
+          {activeDoc && (
+            <>
+              <span>/</span>
+              <span className="font-medium opacity-100 max-w-[200px] truncate">{activeDoc.title}</span>
+            </>
+          )}
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <div className="relative hidden sm:block">
           <Search size={16} className="absolute left-2.5 top-2 text-[var(--color-text-primary)] opacity-50" />
-          <input 
-            type="text" 
-            placeholder="Cari..." 
+          <input
+            type="text"
+            placeholder="Cari..."
             className="pl-8 pr-3 py-1.5 bg-transparent border border-[var(--color-border-subtle)] rounded-md text-sm focus:outline-none focus:border-[var(--color-accent-secondary)] w-48 text-[var(--color-text-primary)]"
           />
         </div>
@@ -54,3 +75,4 @@ export default function Header() {
     </header>
   );
 }
+
